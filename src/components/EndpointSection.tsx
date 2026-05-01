@@ -1,12 +1,28 @@
+
 "use client"
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Play, Send, ChevronRight, Clipboard } from "lucide-react";
+import { Send, ChevronRight, Clipboard, AlertCircle } from "lucide-react";
+import { useFirestore, useAuth } from '@/firebase';
+import { 
+  collection, 
+  getDocs, 
+  getDoc, 
+  doc, 
+  setDoc, 
+  deleteDoc, 
+  query, 
+  where,
+  serverTimestamp 
+} from 'firebase/firestore';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface EndpointSectionProps {
   method: 'GET' | 'POST' | 'DELETE';
@@ -21,31 +37,100 @@ export function EndpointSection({ method, path, description, exampleBody, hasPar
   const [loading, setLoading] = useState(false);
   const [bodyInput, setBodyInput] = useState(JSON.stringify(exampleBody || {}, null, 2));
   const [paramInput, setParamInput] = useState('');
+  
+  const db = useFirestore();
+  const auth = useAuth();
 
   const handleTest = async () => {
+    if (!db || !auth) return;
     setLoading(true);
+    setResponse(null);
+
     try {
-      let finalPath = path;
-      if (hasParams && paramInput) {
-        finalPath = path.replace(':id', paramInput);
+      // Logic for System Health
+      if (path === '/api/health') {
+        setResponse({ message: "Server Running", time: new Date().toISOString(), status: "UP" });
+        setLoading(false);
+        return;
       }
 
-      const options: RequestInit = {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
+      // Logic for Auth
+      if (path === '/api/login') {
+        const body = JSON.parse(bodyInput);
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, body.email, body.password);
+          setResponse({ message: "Login Success", uid: userCredential.user.uid, email: userCredential.user.email });
+        } catch (e: any) {
+          setResponse({ error: e.message || "Invalid Credentials" });
         }
-      };
-
-      if (method === 'POST' && bodyInput) {
-        options.body = bodyInput;
+        setLoading(false);
+        return;
       }
 
-      const res = await fetch(finalPath, options);
-      const data = await res.json();
-      setResponse(data);
+      // Logic for Users API
+      const usersRef = collection(db, 'users');
+
+      if (method === 'GET') {
+        if (hasParams && paramInput) {
+          const docRef = doc(db, 'users', paramInput);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setResponse({ message: "Operation successful", data: { id: docSnap.id, ...docSnap.data() } });
+          } else {
+            setResponse({ error: "User not found" });
+          }
+        } else {
+          const querySnapshot = await getDocs(usersRef);
+          const users = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          setResponse({ message: "Operation successful", data: users });
+        }
+      } 
+      
+      else if (method === 'POST') {
+        const body = JSON.parse(bodyInput);
+        const newUserRef = doc(usersRef);
+        const data = {
+          ...body,
+          createdAt: serverTimestamp()
+        };
+        
+        setDoc(newUserRef, data)
+          .then(() => {
+            setResponse({ message: "User created successfully", data: { id: newUserRef.id, ...body } });
+          })
+          .catch(async (error) => {
+            const permissionError = new FirestorePermissionError({
+              path: newUserRef.path,
+              operation: 'create',
+              requestResourceData: data
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            setResponse({ error: "Permission denied" });
+          });
+      } 
+      
+      else if (method === 'DELETE') {
+        if (!paramInput) {
+          setResponse({ error: "ID required for DELETE operation" });
+        } else {
+          const docRef = doc(db, 'users', paramInput);
+          deleteDoc(docRef)
+            .then(() => {
+              setResponse({ message: "User deleted successfully" });
+            })
+            .catch(async (error) => {
+              const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete'
+              });
+              errorEmitter.emit('permission-error', permissionError);
+              setResponse({ error: "Permission denied" });
+            });
+        }
+      }
+
     } catch (err: any) {
-      setResponse({ error: err.message });
+      setResponse({ error: "Invalid Request Format or Unexpected Error", details: err.message });
     } finally {
       setLoading(false);
     }
@@ -80,9 +165,9 @@ export function EndpointSection({ method, path, description, exampleBody, hasPar
           
           <TabsContent value="info" className="p-4 space-y-4 bg-muted/20 rounded-md border mt-2">
             <div>
-              <h4 className="text-sm font-semibold mb-2">Endpoint URL</h4>
+              <h4 className="text-sm font-semibold mb-2">Endpoint (Simulated)</h4>
               <div className="flex items-center justify-between p-2 bg-background border rounded font-code text-xs">
-                <span>{`${typeof window !== 'undefined' ? window.location.origin : ''}${path}`}</span>
+                <span>{path}</span>
                 <Clipboard className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-primary" />
               </div>
             </div>
@@ -103,7 +188,7 @@ export function EndpointSection({ method, path, description, exampleBody, hasPar
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-muted-foreground">URL Parameters (:id)</label>
                   <Input 
-                    placeholder="Enter ID (e.g. 1)" 
+                    placeholder="Enter Firestore Document ID" 
                     value={paramInput}
                     onChange={(e) => setParamInput(e.target.value)}
                   />
@@ -121,6 +206,13 @@ export function EndpointSection({ method, path, description, exampleBody, hasPar
                 </div>
               )}
 
+              {path === '/api/login' && (
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <p>Login currently uses Firebase Auth. Ensure an admin user is created in the Firebase console.</p>
+                </div>
+              )}
+
               <Button onClick={handleTest} disabled={loading} className="w-full">
                 {loading ? "Requesting..." : <><Send className="w-4 h-4 mr-2" /> Execute Request</>}
               </Button>
@@ -129,7 +221,7 @@ export function EndpointSection({ method, path, description, exampleBody, hasPar
             {response && (
               <div className="mt-4">
                 <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center">
-                  <ChevronRight className="w-4 h-4" /> Response Output
+                  <ChevronRight className="w-4 h-4" /> Response Output (Real-time Firestore)
                 </h4>
                 <div className="relative">
                   <pre className="p-4 bg-slate-900 text-slate-100 rounded-lg text-xs font-code overflow-x-auto border-t-4 border-t-accent shadow-lg max-h-96">
