@@ -1,69 +1,71 @@
 import { SidebarProvider, SidebarInset, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { EndpointSection } from "@/components/EndpointSection";
-import { Server, Users, UserPlus, LogIn, ShieldCheck, Database, Trash2, Search } from "lucide-react";
+import { Server, Users, UserPlus, LogIn, ShieldCheck, Database, Trash2, Search, Terminal, Activity, BookOpen, Settings } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-background w-full">
-        <Sidebar className="border-r shadow-sm">
-          <SidebarHeader className="p-6 border-b">
+      <div className="flex min-h-screen bg-background w-full selection:bg-primary/10">
+        <Sidebar className="border-r border-border/40">
+          <SidebarHeader className="p-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-lg text-white shadow-lg shadow-primary/20">
-                <ShieldCheck className="w-6 h-6" />
+              <div className="flex items-center justify-center w-8 h-8 bg-primary rounded shadow-sm">
+                <ShieldCheck className="w-5 h-5 text-primary-foreground" />
               </div>
-              <div>
-                <h1 className="text-lg font-bold font-headline tracking-tight">UserVault</h1>
-                <p className="text-[10px] uppercase font-semibold text-muted-foreground tracking-widest">API v1.0.0</p>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold tracking-tight">UserVault</span>
+                <Badge variant="secondary" className="text-[10px] w-fit px-1.5 py-0 leading-tight h-4">v1.0.4-dev</Badge>
               </div>
             </div>
           </SidebarHeader>
-          <SidebarContent className="p-4">
+          <SidebarContent className="px-3 pb-4">
             <SidebarMenu>
-              <div className="mb-4">
-                <p className="px-2 mb-2 text-[10px] font-bold uppercase text-muted-foreground tracking-wider">System</p>
+              <div className="mt-4 mb-2">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-3">Development</span>
                 <SidebarMenuItem>
-                  <SidebarMenuButton className="hover:bg-secondary">
-                    <Server className="w-4 h-4 mr-2" />
-                    <span>Health Check</span>
+                  <SidebarMenuButton isActive className="mt-2">
+                    <Terminal className="w-4 h-4" />
+                    <span>Playground</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>
+                    <BookOpen className="w-4 h-4" />
+                    <span>Reference</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </div>
 
-              <div className="mb-4">
-                <p className="px-2 mb-2 text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Users API</p>
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="hover:bg-secondary">
-                    <Users className="w-4 h-4 mr-2" />
-                    <span>List All Users</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="hover:bg-secondary">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    <span>Create User</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="hover:bg-secondary">
-                    <Search className="w-4 h-4 mr-2" />
-                    <span>Get by ID</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="hover:bg-secondary">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    <span>Delete User</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              <div className="mt-6 mb-2">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-3">Endpoints</span>
+                <div className="space-y-1 mt-2">
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>
+                      <Activity className="w-4 h-4" />
+                      <span>System</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>
+                      <Users className="w-4 h-4" />
+                      <span>Users</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>
+                      <LogIn className="w-4 h-4" />
+                      <span>Authentication</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </div>
               </div>
 
-              <div>
-                <p className="px-2 mb-2 text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Auth</p>
+              <div className="mt-auto pt-10">
                 <SidebarMenuItem>
-                  <SidebarMenuButton className="hover:bg-secondary">
-                    <LogIn className="w-4 h-4 mr-2" />
-                    <span>Admin Login</span>
+                  <SidebarMenuButton className="text-muted-foreground">
+                    <Settings className="w-4 h-4" />
+                    <span>Settings</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </div>
@@ -71,75 +73,104 @@ export default function Home() {
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset className="flex-1 p-8 lg:p-12">
-          <div className="max-w-4xl mx-auto">
-            <header className="mb-12">
-              <div className="flex items-center gap-2 text-primary mb-2 font-semibold">
-                <Database className="w-5 h-5" />
-                <span>API Playground</span>
+        <SidebarInset className="api-gradient overflow-y-auto">
+          <div className="max-w-5xl mx-auto px-6 py-12 lg:px-12">
+            <header className="relative mb-16">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 text-primary text-xs font-medium border border-primary/10 mb-6">
+                <Database className="w-3.5 h-3.5" />
+                <span>Documentation & Playground</span>
               </div>
-              <h2 className="text-4xl font-headline font-bold mb-4 tracking-tight">Interactive Documentation</h2>
+              <h1 className="text-5xl font-bold tracking-tight text-foreground mb-4">
+                The User Management <br />
+                <span className="text-muted-foreground/60 font-medium italic">Standard.</span>
+              </h1>
               <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
-                Welcome to UserVault. This interactive dashboard allows you to explore, test, and integrate with our high-performance User Management API. All responses follow a standard JSON structure.
+                A robust, Firestore-backed user directory API designed for high-scale applications. Test live endpoints, inspect real-time responses, and integrate seamlessly.
               </p>
             </header>
 
-            <div className="grid gap-12">
+            <div className="space-y-24">
               <section id="health">
-                <h3 className="text-2xl font-headline font-semibold mb-6 flex items-center gap-2">
-                  <Server className="w-6 h-6 text-primary" /> System Health
-                </h3>
-                <EndpointSection 
-                  method="GET" 
-                  path="/api/health" 
-                  description="Check if the API server is currently reachable and running." 
-                />
+                <div className="flex items-center justify-between mb-8 border-b pb-4">
+                  <div>
+                    <h3 className="text-2xl font-bold flex items-center gap-3">
+                      <Server className="w-6 h-6 text-primary" /> System Health
+                    </h3>
+                    <p className="text-muted-foreground text-sm mt-1">Infrastructure and availability checks</p>
+                  </div>
+                </div>
+                <div className="grid gap-6">
+                  <EndpointSection 
+                    method="GET" 
+                    path="/api/health" 
+                    description="Standard health check to monitor server uptime and Firebase connectivity." 
+                  />
+                </div>
               </section>
 
               <section id="users">
-                <h3 className="text-2xl font-headline font-semibold mb-6 flex items-center gap-2">
-                  <Users className="w-6 h-6 text-primary" /> User Resources
-                </h3>
-                <EndpointSection 
-                  method="GET" 
-                  path="/api/users" 
-                  description="Retrieve a complete list of all users registered in the vault." 
-                />
-                <EndpointSection 
-                  method="POST" 
-                  path="/api/users" 
-                  description="Register a new user in the system. Validates for unique email and required fields." 
-                  exampleBody={{ name: "New User", email: "newuser@example.com" }}
-                />
-                <EndpointSection 
-                  method="GET" 
-                  path="/api/users/:id" 
-                  description="Fetch detailed information for a specific user based on their unique identifier." 
-                  hasParams={true}
-                />
-                <EndpointSection 
-                  method="DELETE" 
-                  path="/api/users/:id" 
-                  description="Permanently remove a user record from the vault." 
-                  hasParams={true}
-                />
+                <div className="flex items-center justify-between mb-8 border-b pb-4">
+                  <div>
+                    <h3 className="text-2xl font-bold flex items-center gap-3">
+                      <Users className="w-6 h-6 text-primary" /> User Directory
+                    </h3>
+                    <p className="text-muted-foreground text-sm mt-1">Full CRUD operations for vault members</p>
+                  </div>
+                </div>
+                <div className="grid gap-6">
+                  <EndpointSection 
+                    method="GET" 
+                    path="/api/users" 
+                    description="Fetch all active user profiles from the Firestore collection." 
+                  />
+                  <EndpointSection 
+                    method="POST" 
+                    path="/api/users" 
+                    description="Register a new profile. Automatically handles server timestamps and ID generation." 
+                    exampleBody={{ name: "Alex Rivera", email: "alex@uservault.io" }}
+                  />
+                  <EndpointSection 
+                    method="GET" 
+                    path="/api/users/:id" 
+                    description="Retrieve a single source of truth for a specific user ID." 
+                    hasParams={true}
+                  />
+                  <EndpointSection 
+                    method="DELETE" 
+                    path="/api/users/:id" 
+                    description="Permanently purge a user record. This action cannot be undone." 
+                    hasParams={true}
+                  />
+                </div>
               </section>
 
               <section id="auth">
-                <h3 className="text-2xl font-headline font-semibold mb-6 flex items-center gap-2">
-                  <LogIn className="w-6 h-6 text-primary" /> Authentication
-                </h3>
-                <EndpointSection 
-                  method="POST" 
-                  path="/api/login" 
-                  description="Authenticate as an administrator. Use 'admin@gmail.com' and '1234' for testing." 
-                  exampleBody={{ email: "admin@gmail.com", password: "1234" }}
-                />
+                <div className="flex items-center justify-between mb-8 border-b pb-4">
+                  <div>
+                    <h3 className="text-2xl font-bold flex items-center gap-3">
+                      <LogIn className="w-6 h-6 text-primary" /> Auth Services
+                    </h3>
+                    <p className="text-muted-foreground text-sm mt-1">Firebase Authentication endpoints</p>
+                  </div>
+                </div>
+                <div className="grid gap-6">
+                  <EndpointSection 
+                    method="POST" 
+                    path="/api/login" 
+                    description="Verify administrator credentials against Firebase Auth." 
+                    exampleBody={{ email: "admin@gmail.com", password: "••••••••" }}
+                  />
+                </div>
               </section>
             </div>
 
-            <footer className="mt-20 pt-8 border-t text-center text-sm text-muted-foreground">
-              <p>© {new Date().getFullYear()} UserVault API. All operations logged at current time.</p>
+            <footer className="mt-32 pt-10 border-t flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
+              <p>&copy; {new Date().getFullYear()} UserVault Infrastructure. Part of the DevScale Suite.</p>
+              <div className="flex items-center gap-6 font-medium">
+                <a href="#" className="hover:text-primary transition-colors">Privacy</a>
+                <a href="#" className="hover:text-primary transition-colors">Terms</a>
+                <a href="#" className="hover:text-primary transition-colors">Support</a>
+              </div>
             </footer>
           </div>
         </SidebarInset>

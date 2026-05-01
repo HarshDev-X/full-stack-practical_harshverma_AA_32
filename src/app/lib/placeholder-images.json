@@ -1,11 +1,10 @@
-
 {
   "placeholderImages": [
     {
       "id": "hero-api",
-      "description": "Abstract technology background showing connectivity and data",
+      "description": "Minimalist server hardware rack detail",
       "imageUrl": "https://picsum.photos/seed/uservault-1/1200/400",
-      "imageHint": "technology connectivity"
+      "imageHint": "server architecture"
     }
   ]
 }
