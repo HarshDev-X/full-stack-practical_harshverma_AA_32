@@ -1,175 +1,158 @@
 import { SidebarProvider, SidebarInset, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { EndpointSection } from "@/components/EndpointSection";
-import { Server, Users, UserPlus, LogIn, ShieldCheck, Database, Trash2, Search, Terminal, Activity, BookOpen, Settings } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ShieldCheck, Database, Server, Users, UserPlus, Search, Trash2, LogIn, Activity, Settings, Code, Terminal } from "lucide-react";
 
 export default function Home() {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-background w-full selection:bg-primary/10">
-        <Sidebar className="border-r border-border/40">
+      <div className="flex min-h-screen bg-zinc-950 w-full">
+        <Sidebar className="border-r border-zinc-800 bg-zinc-950">
           <SidebarHeader className="p-6">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-primary rounded shadow-sm">
-                <ShieldCheck className="w-5 h-5 text-primary-foreground" />
+              <div className="flex items-center justify-center w-10 h-10 bg-white rounded-xl text-black shadow-lg">
+                <ShieldCheck className="w-6 h-6" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold tracking-tight">UserVault</span>
-                <Badge variant="secondary" className="text-[10px] w-fit px-1.5 py-0 leading-tight h-4">v1.0.4-dev</Badge>
+                <span className="text-sm font-bold text-white tracking-tight">UserVault</span>
+                <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Core Engine</span>
               </div>
             </div>
           </SidebarHeader>
-          <SidebarContent className="px-3 pb-4">
+          <SidebarContent className="px-3">
             <SidebarMenu>
-              <div className="mt-4 mb-2">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-3">Development</span>
+              <div className="mt-8 mb-6">
+                <p className="px-3 mb-2 text-[10px] font-bold uppercase text-zinc-600 tracking-[0.2em]">Environment</p>
                 <SidebarMenuItem>
-                  <SidebarMenuButton isActive className="mt-2">
+                  <SidebarMenuButton isActive className="bg-zinc-900 text-white">
                     <Terminal className="w-4 h-4" />
-                    <span>Playground</span>
+                    <span className="font-medium">Sandbox Mode</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <BookOpen className="w-4 h-4" />
-                    <span>Reference</span>
+                  <SidebarMenuButton className="text-zinc-400 hover:text-white">
+                    <Code className="w-4 h-4" />
+                    <span>Logs</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </div>
 
-              <div className="mt-6 mb-2">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-3">Endpoints</span>
-                <div className="space-y-1 mt-2">
+              <div className="mb-6">
+                <p className="px-3 mb-2 text-[10px] font-bold uppercase text-zinc-600 tracking-[0.2em]">Endpoints</p>
+                <div className="space-y-1">
                   <SidebarMenuItem>
-                    <SidebarMenuButton>
-                      <Activity className="w-4 h-4" />
+                    <SidebarMenuButton className="text-zinc-400 hover:text-white">
+                      <Activity className="w-4 h-4 text-emerald-500" />
                       <span>System</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton>
-                      <Users className="w-4 h-4" />
+                    <SidebarMenuButton className="text-zinc-400 hover:text-white">
+                      <Users className="w-4 h-4 text-blue-500" />
                       <span>Users</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton>
-                      <LogIn className="w-4 h-4" />
-                      <span>Authentication</span>
+                    <SidebarMenuButton className="text-zinc-400 hover:text-white">
+                      <LogIn className="w-4 h-4 text-orange-500" />
+                      <span>Auth</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </div>
-              </div>
-
-              <div className="mt-auto pt-10">
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="text-muted-foreground">
-                    <Settings className="w-4 h-4" />
-                    <span>Settings</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
               </div>
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset className="api-gradient overflow-y-auto">
-          <div className="max-w-5xl mx-auto px-6 py-12 lg:px-12">
-            <header className="relative mb-16">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 text-primary text-xs font-medium border border-primary/10 mb-6">
-                <Database className="w-3.5 h-3.5" />
-                <span>Documentation & Playground</span>
+        <SidebarInset className="bg-zinc-950 flex flex-col">
+          <div className="flex-1 overflow-y-auto px-6 py-12 lg:px-16">
+            <header className="mb-16 max-w-4xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-wider mb-6">
+                <Database className="w-3 h-3 text-white" />
+                <span>Documentation & Runtime</span>
               </div>
-              <h1 className="text-5xl font-bold tracking-tight text-foreground mb-4">
-                The User Management <br />
-                <span className="text-muted-foreground/60 font-medium italic">Standard.</span>
+              <h1 className="text-5xl font-extrabold text-white tracking-tight leading-[1.1] mb-6">
+                Scalable User Management <br />
+                <span className="text-zinc-600 italic font-medium">Without the friction.</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
-                A robust, Firestore-backed user directory API designed for high-scale applications. Test live endpoints, inspect real-time responses, and integrate seamlessly.
+              <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
+                A hardened API interface for high-traffic applications. Test real-time database mutations, monitor system health, and secure admin sessions directly from this dashboard.
               </p>
             </header>
 
-            <div className="space-y-24">
-              <section id="health">
-                <div className="flex items-center justify-between mb-8 border-b pb-4">
-                  <div>
-                    <h3 className="text-2xl font-bold flex items-center gap-3">
-                      <Server className="w-6 h-6 text-primary" /> System Health
-                    </h3>
-                    <p className="text-muted-foreground text-sm mt-1">Infrastructure and availability checks</p>
-                  </div>
+            <div className="space-y-24 pb-20">
+              <section id="health" className="max-w-5xl">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="h-px flex-1 bg-zinc-800"></div>
+                  <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-3">
+                    <Server className="w-4 h-4" /> System Control
+                  </h3>
+                  <div className="h-px flex-1 bg-zinc-800"></div>
                 </div>
-                <div className="grid gap-6">
-                  <EndpointSection 
-                    method="GET" 
-                    path="/api/health" 
-                    description="Standard health check to monitor server uptime and Firebase connectivity." 
-                  />
-                </div>
+                <EndpointSection 
+                  method="GET" 
+                  path="/api/health" 
+                  description="Global heart-beat check for Firestore connectivity and Auth availability." 
+                />
               </section>
 
-              <section id="users">
-                <div className="flex items-center justify-between mb-8 border-b pb-4">
-                  <div>
-                    <h3 className="text-2xl font-bold flex items-center gap-3">
-                      <Users className="w-6 h-6 text-primary" /> User Directory
-                    </h3>
-                    <p className="text-muted-foreground text-sm mt-1">Full CRUD operations for vault members</p>
-                  </div>
+              <section id="users" className="max-w-5xl">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="h-px flex-1 bg-zinc-800"></div>
+                  <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-3">
+                    <Users className="w-4 h-4" /> User Resources
+                  </h3>
+                  <div className="h-px flex-1 bg-zinc-800"></div>
                 </div>
-                <div className="grid gap-6">
+                <div className="grid gap-8">
                   <EndpointSection 
                     method="GET" 
                     path="/api/users" 
-                    description="Fetch all active user profiles from the Firestore collection." 
+                    description="Fetch collection of all UserProfile documents currently in the vault." 
                   />
                   <EndpointSection 
                     method="POST" 
                     path="/api/users" 
-                    description="Register a new profile. Automatically handles server timestamps and ID generation." 
-                    exampleBody={{ name: "Alex Rivera", email: "alex@uservault.io" }}
+                    description="Push a new UserProfile. Handles field validation and server timestamps." 
+                    exampleBody={{ name: "Marcus Thorne", email: "marcus@vault.io" }}
                   />
                   <EndpointSection 
                     method="GET" 
                     path="/api/users/:id" 
-                    description="Retrieve a single source of truth for a specific user ID." 
+                    description="Specific point-query to retrieve a singular user record by ID." 
                     hasParams={true}
                   />
                   <EndpointSection 
                     method="DELETE" 
                     path="/api/users/:id" 
-                    description="Permanently purge a user record. This action cannot be undone." 
+                    description="Irrevocable deletion of a user profile from the database." 
                     hasParams={true}
                   />
                 </div>
               </section>
 
-              <section id="auth">
-                <div className="flex items-center justify-between mb-8 border-b pb-4">
-                  <div>
-                    <h3 className="text-2xl font-bold flex items-center gap-3">
-                      <LogIn className="w-6 h-6 text-primary" /> Auth Services
-                    </h3>
-                    <p className="text-muted-foreground text-sm mt-1">Firebase Authentication endpoints</p>
-                  </div>
+              <section id="auth" className="max-w-5xl">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="h-px flex-1 bg-zinc-800"></div>
+                  <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-3">
+                    <ShieldCheck className="w-4 h-4" /> Authentication
+                  </h3>
+                  <div className="h-px flex-1 bg-zinc-800"></div>
                 </div>
-                <div className="grid gap-6">
-                  <EndpointSection 
-                    method="POST" 
-                    path="/api/login" 
-                    description="Verify administrator credentials against Firebase Auth." 
-                    exampleBody={{ email: "admin@gmail.com", password: "••••••••" }}
-                  />
-                </div>
+                <EndpointSection 
+                  method="POST" 
+                  path="/api/login" 
+                  description="Elevate session to Administrator status. Use existing Firebase Auth credentials." 
+                  exampleBody={{ email: "admin@gmail.com", password: "••••••••" }}
+                />
               </section>
             </div>
 
-            <footer className="mt-32 pt-10 border-t flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
-              <p>&copy; {new Date().getFullYear()} UserVault Infrastructure. Part of the DevScale Suite.</p>
-              <div className="flex items-center gap-6 font-medium">
-                <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-                <a href="#" className="hover:text-primary transition-colors">Terms</a>
-                <a href="#" className="hover:text-primary transition-colors">Support</a>
+            <footer className="pt-12 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-bold text-zinc-600 uppercase tracking-widest">
+              <p>&copy; {new Date().getFullYear()} UserVault Core Labs</p>
+              <div className="flex items-center gap-8">
+                <a href="#" className="hover:text-white transition-colors">Infrastructure</a>
+                <a href="#" className="hover:text-white transition-colors">Protocol</a>
+                <a href="#" className="hover:text-white transition-colors">Privacy</a>
               </div>
             </footer>
           </div>

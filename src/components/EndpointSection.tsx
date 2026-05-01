@@ -5,22 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Send, Copy, Check, Terminal, Code2, AlertCircle, Loader2 } from "lucide-react";
+import { Send, Copy, Check, Terminal, Loader2, Braces, Play } from "lucide-react";
 import { useFirestore, useAuth } from '@/firebase';
-import { 
-  collection, 
-  getDocs, 
-  getDoc, 
-  doc, 
-  setDoc, 
-  deleteDoc, 
-  serverTimestamp 
-} from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 interface EndpointSectionProps {
@@ -40,7 +30,6 @@ export function EndpointSection({ method, path, description, exampleBody, hasPar
   
   const db = useFirestore();
   const auth = useAuth();
-  const { toast } = useToast();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(JSON.stringify(response, null, 2));
@@ -48,7 +37,7 @@ export function EndpointSection({ method, path, description, exampleBody, hasPar
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleTest = async () => {
+  const executeRequest = async () => {
     if (!db || !auth) return;
     setLoading(true);
     setResponse(null);
@@ -63,12 +52,8 @@ export function EndpointSection({ method, path, description, exampleBody, hasPar
       if (path === '/api/login') {
         const body = JSON.parse(bodyInput);
         signInWithEmailAndPassword(auth, body.email, body.password)
-          .then((userCredential) => {
-            setResponse({ status: "success", session: { uid: userCredential.user.uid, email: userCredential.user.email, expires: "1h" } });
-          })
-          .catch((e: any) => {
-            setResponse({ status: "unauthorized", code: 401, message: e.message });
-          })
+          .then((cred) => setResponse({ status: "success", uid: cred.user.uid }))
+          .catch((e) => setResponse({ status: "error", code: e.code, message: e.message }))
           .finally(() => setLoading(false));
         return;
       }
@@ -77,162 +62,133 @@ export function EndpointSection({ method, path, description, exampleBody, hasPar
 
       if (method === 'GET') {
         if (hasParams) {
-          if (!paramInput) throw new Error("Document ID is required.");
-          const docRef = doc(db, 'users', paramInput);
-          const docSnap = await getDoc(docRef);
-          setResponse(docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : { error: "Object not found" });
+          if (!paramInput) throw new Error("ID required");
+          const snap = await getDoc(doc(db, 'users', paramInput));
+          setResponse(snap.exists() ? { id: snap.id, ...snap.data() } : { error: "not_found" });
         } else {
-          const snapshot = await getDocs(usersRef);
-          setResponse(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+          const snap = await getDocs(usersRef);
+          setResponse(snap.docs.map(d => ({ id: d.id, ...d.data() })));
         }
       } 
       else if (method === 'POST') {
         const body = JSON.parse(bodyInput);
-        const newUserRef = doc(usersRef);
+        const ref = doc(usersRef);
         const data = { ...body, createdAt: serverTimestamp() };
-        
-        setDoc(newUserRef, data)
-          .then(() => setResponse({ id: newUserRef.id, ...body, created: true }))
-          .catch((error) => {
-            const permissionError = new FirestorePermissionError({
-              path: newUserRef.path,
-              operation: 'create',
-              requestResourceData: data
-            });
-            errorEmitter.emit('permission-error', permissionError);
-            setResponse({ error: "Access Denied", context: "Security Rules" });
+        setDoc(ref, data)
+          .then(() => setResponse({ id: ref.id, ...body, created: true }))
+          .catch(async (e) => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({ path: ref.path, operation: 'create', requestResourceData: data }));
+            setResponse({ status: "forbidden", detail: "security_policy" });
           });
       } 
       else if (method === 'DELETE') {
-        if (!paramInput) throw new Error("ID is required.");
-        const docRef = doc(db, 'users', paramInput);
-        deleteDoc(docRef)
-          .then(() => setResponse({ status: "purged", id: paramInput }))
-          .catch((error) => {
-            const permissionError = new FirestorePermissionError({ path: docRef.path, operation: 'delete' });
-            errorEmitter.emit('permission-error', permissionError);
-            setResponse({ error: "Access Denied" });
+        if (!paramInput) throw new Error("ID required");
+        const ref = doc(db, 'users', paramInput);
+        deleteDoc(ref)
+          .then(() => setResponse({ status: "deleted", id: paramInput }))
+          .catch(async (e) => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({ path: ref.path, operation: 'delete' }));
+            setResponse({ status: "forbidden" });
           });
       }
-
     } catch (err: any) {
-      setResponse({ error: "Malformed Request", message: err.message });
+      setResponse({ error: "client_error", message: err.message });
     } finally {
       if (path !== '/api/login') setLoading(false);
     }
   };
 
-  const getMethodStyles = (m: string) => {
-    switch (m) {
-      case 'GET': return 'bg-sky-500/10 text-sky-600 border-sky-200/50';
-      case 'POST': return 'bg-emerald-500/10 text-emerald-600 border-emerald-200/50';
-      case 'DELETE': return 'bg-rose-500/10 text-rose-600 border-rose-200/50';
-      default: return 'bg-slate-500/10 text-slate-600';
-    }
-  };
-
   return (
-    <Card className="group overflow-hidden border border-border/60 hover:border-primary/20 transition-all duration-300">
-      <div className="flex flex-col lg:flex-row h-full">
-        <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-border/40">
-          <div className="flex items-center gap-3 mb-4">
-            <Badge variant="outline" className={cn("font-bold px-2.5 py-0.5 rounded-md", getMethodStyles(method))}>
-              {method}
-            </Badge>
-            <code className="text-xs font-code font-bold opacity-70 tracking-tight">{path}</code>
+    <Card className="bg-zinc-900 border-zinc-800 overflow-hidden shadow-2xl">
+      <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-zinc-800">
+        <div className="flex-1 p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Badge className={cn(
+                "font-black tracking-tighter text-[10px] px-2 py-0.5",
+                method === 'GET' && "bg-blue-500/10 text-blue-400 border-blue-500/20",
+                method === 'POST' && "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                method === 'DELETE' && "bg-red-500/10 text-red-400 border-red-500/20"
+              )}>
+                {method}
+              </Badge>
+              <code className="text-[11px] font-bold text-zinc-500 font-mono tracking-tight">{path}</code>
+            </div>
+            <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Request Builder</div>
           </div>
-          
-          <h4 className="text-lg font-bold mb-2">{description}</h4>
-          
-          <Tabs defaultValue="test" className="mt-8">
-            <TabsList className="w-fit bg-muted/40 p-1 h-9 mb-4">
-              <TabsTrigger value="info" className="text-xs px-4 h-7">Schema</TabsTrigger>
-              <TabsTrigger value="test" className="text-xs px-4 h-7">Playground</TabsTrigger>
-            </TabsList>
 
-            <TabsContent value="info" className="space-y-4 animate-in fade-in slide-in-from-top-1">
-              <div className="rounded-lg bg-muted/30 p-4 border border-border/50">
-                <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-                  <Code2 className="w-3.5 h-3.5" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider">Parameters</span>
+          <div>
+            <h4 className="text-md font-bold text-white mb-2">{description}</h4>
+            <div className="h-px w-12 bg-zinc-700"></div>
+          </div>
+
+          <div className="space-y-4 pt-4">
+            {hasParams && (
+              <div className="space-y-1.5">
+                <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Document UID</p>
+                <Input 
+                  value={paramInput}
+                  onChange={(e) => setParamInput(e.target.value)}
+                  placeholder="e.g. z98aJks29..."
+                  className="bg-zinc-950 border-zinc-800 h-10 text-xs font-mono text-zinc-300 focus:ring-1 focus:ring-white transition-all"
+                />
+              </div>
+            )}
+
+            {(method === 'POST' || path === '/api/login') && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Payload</p>
+                  <Braces className="w-3 h-3 text-zinc-700" />
                 </div>
-                {hasParams ? (
-                  <p className="text-sm">This endpoint requires a dynamic <code className="text-primary">:id</code> identifier segment.</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">No required URL parameters.</p>
-                )}
+                <textarea 
+                  value={bodyInput}
+                  onChange={(e) => setBodyInput(e.target.value)}
+                  className="w-full h-32 p-3 text-xs font-mono bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-400 focus:text-zinc-200 outline-none resize-none transition-colors"
+                />
               </div>
-            </TabsContent>
+            )}
 
-            <TabsContent value="test" className="space-y-4 animate-in fade-in slide-in-from-top-1">
-              <div className="space-y-4">
-                {hasParams && (
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Target ID</label>
-                    <Input 
-                      placeholder="firestore_doc_id" 
-                      className="h-9 text-sm font-code"
-                      value={paramInput}
-                      onChange={(e) => setParamInput(e.target.value)}
-                    />
-                  </div>
-                )}
-                
-                {method === 'POST' && (
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Request Payload</label>
-                    <textarea 
-                      className="w-full h-32 p-3 text-xs font-code bg-muted/20 border rounded-md focus:ring-1 focus:ring-primary outline-none resize-none"
-                      value={bodyInput}
-                      onChange={(e) => setBodyInput(e.target.value)}
-                    />
-                  </div>
-                )}
-
-                <Button onClick={handleTest} disabled={loading} className="w-full h-9 mt-4 shadow-sm">
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-3.5 h-3.5 mr-2" /> Send Request</>}
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
+            <Button 
+              onClick={executeRequest} 
+              disabled={loading}
+              className="w-full bg-white text-black hover:bg-zinc-200 font-bold uppercase text-[10px] tracking-widest h-10 rounded-lg"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Play className="w-3.5 h-3.5 mr-2 fill-current" /> Execute Method</>}
+            </Button>
+          </div>
         </div>
 
-        <div className="w-full lg:w-[45%] bg-slate-950 p-6 flex flex-col">
+        <div className="lg:w-[45%] bg-zinc-950/50 p-6 flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-slate-400">
-              <Terminal className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">HTTP Response</span>
+            <div className="flex items-center gap-2 text-zinc-500">
+              <Terminal className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Standard Response</span>
             </div>
             {response && (
-              <button 
-                onClick={handleCopy}
-                className="text-slate-500 hover:text-slate-200 transition-colors"
-              >
-                {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+              <button onClick={handleCopy} className="p-1 hover:text-white transition-colors text-zinc-600">
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             )}
           </div>
-          
-          <div className="flex-1 min-h-[200px] json-view relative">
+
+          <div className="flex-1 min-h-[220px] terminal-scroll overflow-y-auto relative">
             {!response && !loading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-700">
-                <div className="w-8 h-8 rounded-full border border-slate-800 flex items-center justify-center mb-2">
-                  <AlertCircle className="w-4 h-4 opacity-30" />
-                </div>
-                <p className="text-[11px] font-medium italic opacity-40">Awaiting execution...</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-800">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em]">Awaiting Trigger</p>
               </div>
             )}
             
             {loading && (
-              <div className="space-y-2 animate-pulse">
-                <div className="h-3 w-3/4 bg-slate-800 rounded"></div>
-                <div className="h-3 w-1/2 bg-slate-800 rounded"></div>
-                <div className="h-3 w-2/3 bg-slate-800 rounded"></div>
+              <div className="space-y-3 animate-pulse pt-2">
+                <div className="h-2 w-3/4 bg-zinc-900 rounded"></div>
+                <div className="h-2 w-1/2 bg-zinc-900 rounded"></div>
+                <div className="h-2 w-2/3 bg-zinc-900 rounded"></div>
               </div>
             )}
 
             {response && (
-              <pre className="text-[11px] font-code text-slate-300 overflow-x-auto selection:bg-white/10 h-full">
+              <pre className="text-[10px] font-mono text-emerald-500/80 leading-relaxed whitespace-pre-wrap">
                 {JSON.stringify(response, null, 2)}
               </pre>
             )}
